@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <description>Post to chatter</description>
+        <name>postToChatter</name>
+        <label>postToChatter</label>
+        <locationX>1015</locationX>
+        <locationY>51</locationY>
+        <actionName>chatterPost</actionName>
+        <actionType>chatterPost</actionType>
+        <inputParameters>
+            <name>text</name>
+            <value>
+                <elementReference>chatterPostTextTemplate</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>subjectNameOrId</name>
+            <value>
+                <elementReference>recordID</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <assignments>
+        <description>Add text template to the variable {!atMentionUser} for the Chatter post</description>
+        <name>Add_user_ID_to_the_text_template</name>
+        <label>Add user ID to the text template</label>
+        <locationX>693</locationX>
+        <locationY>211</locationY>
+        <assignmentItems>
+            <assignToReference>atMentionUser</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>groupMemberUserID</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <decisions>
+        <description>Determine whether members were found in the fast lookup</description>
+        <name>Members_Found</name>
+        <label>Members Found?</label>
+        <locationX>499</locationX>
+        <locationY>52</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Members_Found1</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>collGroupMembers</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Loop_Member_List</targetReference>
+            </connector>
+            <label>Members Found</label>
+        </rules>
+    </decisions>
+    <description>Invoked from process builder. This will post to Chatter for the record and at mention members of the public group passed from process builder with a customized custom Chatter message.</description>
+    <interviewLabel>Send Post to Members of a Public Group {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Send Post to Members of a Public Group</label>
+    <loops>
+        <description>Loop de loop</description>
+        <name>Loop_Member_List</name>
+        <label>Loop Member List</label>
+        <locationX>690</locationX>
+        <locationY>50</locationY>
+        <assignNextValueToReference>singleGroupMember</assignNextValueToReference>
+        <collectionReference>collGroupMembers</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Add_user_ID_to_the_text_template</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Lookup_Chatter_Message</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <description>Lookup the text stored in the Message custom metadata type</description>
+        <name>Lookup_Chatter_Message</name>
+        <label>Lookup Chatter Message</label>
+        <locationX>871</locationX>
+        <locationY>51</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>postToChatter</targetReference>
+        </connector>
+        <filters>
+            <field>MasterLabel</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>chatterMessageMasterLabel</elementReference>
+            </value>
+        </filters>
+        <object>Message__mdt</object>
+        <outputAssignments>
+            <assignToReference>chatterMessage</assignToReference>
+            <field>Message_Text__c</field>
+        </outputAssignments>
+    </recordLookups>
+    <recordLookups>
+        <description>Lookup the ID for the public group passed from process builder.</description>
+        <name>Lookup_the_Group_ID</name>
+        <label>Lookup the Group ID</label>
+        <locationX>190</locationX>
+        <locationY>50</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Lookup_Users_in_the_public_group</targetReference>
+        </connector>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>publicGroupAPIName</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <queriedFields>Id</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <description>Lookup users associated to the public group passed from process builder</description>
+        <name>Lookup_Users_in_the_public_group</name>
+        <label>Lookup Users in the public group</label>
+        <locationX>339</locationX>
+        <locationY>50</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Members_Found</targetReference>
+        </connector>
+        <filters>
+            <field>GroupId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>publicGroupID</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>GroupMember</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>UserOrGroupId</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>50</locationX>
+        <locationY>50</locationY>
+        <connector>
+            <targetReference>Lookup_the_Group_ID</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <textTemplates>
+        <description>Stores the text that will appear in the Chatter message</description>
+        <name>chatterPostTextTemplate</name>
+        <text>&lt;p&gt;{!atMentionUser} {!chatterMessage}&lt;/p&gt;</text>
+    </textTemplates>
+    <textTemplates>
+        <description>Stores the search results of the user ID of each group member from the loop.</description>
+        <name>groupMemberUserID</name>
+        <text>&lt;p&gt;@[{!singleGroupMember.UserOrGroupId}]&lt;/p&gt;</text>
+    </textTemplates>
+    <variables>
+        <description>Stores the user ID to at mention in Chatter.</description>
+        <name>atMentionUser</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>This is the actual chatter message pulled from the Message custom metadata type.</description>
+        <name>chatterMessage</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Stores the master label of the Message custom metadata type record from process builder.</description>
+        <name>chatterMessageMasterLabel</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>collGroupMembers</name>
+        <dataType>SObject</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>GroupMember</objectType>
+    </variables>
+    <variables>
+        <description>This is the API name of the public group passed from process builder.</description>
+        <name>publicGroupAPIName</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Stores the group ID associated with the public group passed from process builder.</description>
+        <name>publicGroupID</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Stores the ID of the record from process builder.</description>
+        <name>recordID</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Holds information for a single group member</description>
+        <name>singleGroupMember</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>GroupMember</objectType>
+    </variables>
+</Flow>

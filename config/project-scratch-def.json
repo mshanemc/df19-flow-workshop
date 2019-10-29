@@ -1,12 +1,22 @@
 {
   "orgName": "df19flowworkshop",
   "edition": "Developer",
+  "hasSampleData": true,
   "settings": {
-    "orgPreferenceSettings": {
-      "networksEnabled": false,
-      "s1DesktopEnabled": true,
-      "pathAssistantsEnabled": true,
-      "s1EncryptedStoragePref2": false
+    "communitiesSettings": {
+      "enableNetworksEnabled": false
+    },
+    "lightningExperienceSettings": {
+      "enableS1DesktopEnabled": true
+    },
+    "pathAssistantSettings": {
+      "pathAssistantEnabled": true
+    },
+    "mobileSettings": {
+      "enableS1EncryptedStoragePref2": false
+    },
+    "quoteSettings": {
+      "enableQuote": true
     }
   }
 }
